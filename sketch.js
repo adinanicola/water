@@ -4,24 +4,23 @@ let points = [];
 let wave = [];
 
 // Variables for the moving ellipse
-let position; // Variable to store the position of the ellipse as a vector
-let velocity; // Vector to store the velocity direction of the ellipse
-let angle = 0.0; // Angle for the sine wave calculation
-let amplitude = 20; // Height of the wave
-let speed = 0.05; // How fast the wave moves
-let movementSpeed = 1; // Constant speed for the ball's movement
+let balls = []; 
+let intersecting = false;
+
 
 function setup() {
   createCanvas(400, 400);
-  angleMode(DEGREES);
-  stroke(255);
-  strokeWeight(12);
   pixelDensity(1);
 
-  // Initialize moving ellipse
-  position = createVector(width / 2, height / 2);
-  velocity = p5.Vector.random2D();
-  velocity.setMag(movementSpeed);
+  for (let i = 0; i < 2; i++) {
+    balls.push({
+      position: createVector(random(width), height / 2),
+      velocity: p5.Vector.random2D().setMag(random(0.5, 0.8)),
+      amplitude: random(10, 30),
+      angularVelocity: random(0.02, 0.1),
+      angle: 0,
+    });
+  }
 
   randomSeed(70);
   for (let i = 0; i < 36; i++) {
@@ -58,7 +57,6 @@ function setup() {
          wave[f][index + 3] = 255;
       }
     }
-    console.log('Generating frame data: ' + (f + 1) + '/' + frmLen);
   }
 }
 
@@ -72,23 +70,44 @@ function draw() {
   }
   updatePixels();
 
-  // Moving ellipse logic
-  let yoffset = sin(angle) * amplitude;
-  ellipse(position.x, position.y + yoffset, 50, 50);
-  angle += speed;
-  position.add(velocity);
+  intersecting = checkIntersection(balls[0], balls[1]); // Check if balls are intersecting
 
-  // Reverse direction if it hits the canvas edges
-  if (position.x > width || position.x < 0) {
-    velocity.x *= -1;
+  balls.forEach((ball, index) => {
+    let yOffset = sin(ball.angle) * ball.amplitude;
+    ball.position.add(ball.velocity);
+    boundaryCheck(ball);
+
+     // Change fill based on intersection
+     if (intersecting) {
+      fill(186, 163, 63, 100);
+    } else {
+      fill(186, 163, 63);
+    }
+
+    noStroke();
+    ellipse(ball.position.x, ball.position.y + yOffset, 80, 80);
+    ball.angle += ball.angularVelocity;
+  });
+}
+
+function boundaryCheck(ball) {
+  if (ball.position.x > width || ball.position.x < 0) {
+    ball.velocity.x *= -1;
+    ball.position.x = constrain(ball.position.x, 0, width);
   }
   if (position.y > height || position.y < 0) {
     velocity.y *= -1;
   }
 }
 
+// Function to check if balls are intersecting
+function checkIntersection(ball1, ball2) {
+  let distance = dist(ball1.position.x, ball1.position.y, ball2.position.x, ball2.position.y);
+  return distance < 80; // Since the diameter is 40, radius is 20, and we're checking for 2 radii
+}
+
+
 function waveColor(x, a, b, e) {
   if (x < 0) return b;
   else return Math.pow(x / a, e) + b;
 }
-
