@@ -95,8 +95,9 @@ function boundaryCheck(ball) {
     ball.velocity.x *= -1;
     ball.position.x = constrain(ball.position.x, 0, width);
   }
-  if (position.y > height || position.y < 0) {
-    velocity.y *= -1;
+  if (ball.position.y > height || ball.position.y < 0) {
+    ball.velocity.y *= -1;
+    ball.position.y = constrain(ball.position.y, 0, height);
   }
 }
 
